@@ -31,6 +31,7 @@ public class Application {
                 .filter(user -> admins.getAdmins()
                         .contains(user.getEmail()))
                 .map(User::getName)
+                .sorted()
                 .toList();
     }
     // END
