@@ -46,13 +46,13 @@ public class ProductsController {
 
     @PutMapping(path = "/{id}")
     public Product updateProduct(@PathVariable long id, @RequestBody Product newProduct) {
-        Optional<Product> product = productRepository.findById(id);
-        if (product.isEmpty())
-            throw new ResourceNotFoundException("Product with id " + id + " not found");
+        var product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with id " + id + " not found"));
 
-        newProduct.setId(id);
+        product.setPrice(newProduct.getPrice());
+        product.setTitle(newProduct.getTitle());
 
-        return productRepository.save(newProduct);
+        return productRepository.save(product);
 
     }
     // END
