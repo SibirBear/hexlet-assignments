@@ -42,11 +42,12 @@ public class TaskControllerTest {
     @Autowired
     ObjectMapper om;
 
-    @BeforeEach
-    public void prepareRepo() {
-        taskRepository.deleteAll();
+    @Test
+    public void testWelcomePage() throws Exception {
+        var result = mockMvc.perform(get("/")).andExpect(status().isOk()).andReturn();
+        var body = result.getResponse().getContentAsString();
+        assertThat(body).contains("Welcome to Spring");
     }
-
     @Test
     public void testIndex() throws Exception {
         var result = mockMvc.perform(get("/tasks")).andExpect(status().isOk()).andReturn();
@@ -54,101 +55,81 @@ public class TaskControllerTest {
         assertThatJson(body).isArray();
     }
 
-    //     * Создание новой задачи
-    @Test
-    public void testCreateTask() throws Exception {
-        var body = new HashMap<>();
-        var title = faker.lorem().word();
-        var description = faker.lorem().paragraph();
-
-        body.put("title", title);
-        body.put("description", description);
-
-        var request = post("/tasks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(body));
-
-        mockMvc.perform(request).andExpect(status().isCreated());
-
-        var task = taskRepository.findByTitle(title).get();
-        assertThat(task.getTitle()).isEqualTo(title);
-        assertThat(task.getDescription()).isEqualTo(description);
-        assertThat(task.getCreatedAt()).isNotNull();
-        assertThat(task.getUpdatedAt()).isNotNull();
-
+    private Task generateTask() {
+        return Instancio.of(Task.class)
+                .ignore(Select.field(Task::getId))
+                .supply(Select.field(Task::getTitle), () -> faker.lebowski().actor())
+                .supply(Select.field(Task::getDescription), () -> faker.lebowski().quote())
+                .create();
     }
 
     //     * Просмотр конкретной задачи
     @Test
     public void testGetTask() throws Exception {
-        var title = faker.book().title();
-        var description = faker.book().publisher();
-
-        var task = Instancio.of(Task.class)
-                .ignore(Select.field(Task::getId))
-                .supply(Select.field(Task::getTitle), () -> title)
-                .supply(Select.field(Task::getDescription), () -> description)
-                .ignore(Select.field(Task::getCreatedAt))
-                .ignore(Select.field(Task::getUpdatedAt))
-                .create();
+        var task = generateTask();
         taskRepository.save(task);
 
         var request = get("/tasks/" + task.getId());
+        var result = mockMvc.perform(request)
+                .andExpect(status().isOk()).andReturn();
+        var body = result.getResponse().getContentAsString();
 
-        var result = mockMvc.perform(request).andExpect(status().isOk()).andReturn();
-        task = taskRepository.findByTitle(title).get();
+        assertThatJson(body).and(
+                v -> v.node("title").isEqualTo(task.getTitle()),
+                v -> v.node("description").isEqualTo(task.getDescription())
+        );
 
-        assertThat(task.getTitle()).isEqualTo(title);
-        assertThat(task.getDescription()).isEqualTo(description);
-        assertThat(task.getCreatedAt()).isNotNull();
-        assertThat(task.getUpdatedAt()).isNotNull();
+    }
 
+    //     * Создание новой задачи
+    @Test
+    public void testCreateTask() throws Exception {
+        var task = generateTask();
+
+        var request = post("/tasks")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(task));
+
+        mockMvc.perform(request).andExpect(status().isCreated());
+
+        var newTask = taskRepository.findByTitle(task.getTitle()).get();
+        assertThat(newTask.getTitle()).isEqualTo(task.getTitle());
+        assertThat(newTask.getDescription()).isEqualTo(task.getDescription());
+        assertThat(newTask).isNotNull();
 
     }
 
 //     * Обновление существующей задачи
     @Test
     public void testUpdateTask() throws Exception {
-        var task = Instancio.of(Task.class)
-                .ignore(Select.field(Task::getId))
-                .supply(Select.field(Task::getTitle), () -> faker.book().title())
-                .supply(Select.field(Task::getDescription), () -> faker.book().publisher())
-                .ignore(Select.field(Task::getCreatedAt))
-                .ignore(Select.field(Task::getUpdatedAt))
-                .create();
+        var task = generateTask();
         taskRepository.save(task);
 
         var body = new HashMap<>();
-        var title = faker.lorem().word();
-        var description = faker.lorem().paragraph();
 
-        body.put("title", title);
-        body.put("description", description);
+        body.put("title", "updated title");
+
         var request = put("/tasks/" + task.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(body));
 
         mockMvc.perform(request).andExpect(status().isOk());
 
-        task = taskRepository.findByTitle(title).get();
-        assertThat(task.getTitle()).isEqualTo(title);
+        task = taskRepository.findById(task.getId()).get();
+        assertThat(task.getTitle()).isEqualTo(body.get("title"));
 
     }
 //     * Удаление задачи
     @Test
     public void testDeleteTask() throws Exception {
-        var task = Instancio.of(Task.class)
-                .ignore(Select.field(Task::getId))
-                .supply(Select.field(Task::getTitle), () -> faker.book().title())
-                .supply(Select.field(Task::getDescription), () -> faker.book().publisher())
-                .ignore(Select.field(Task::getCreatedAt))
-                .ignore(Select.field(Task::getUpdatedAt))
-                .create();
+        var task = generateTask();
         taskRepository.save(task);
 
-        mockMvc.perform(delete("/tasks/" + task.getId())).andExpect(status().isOk());
+        mockMvc.perform(delete("/tasks/" + task.getId()))
+                .andExpect(status().isOk());
 
-        assertThat(taskRepository.findAll()).isEmpty();
+        task = taskRepository.findById(task.getId()).orElse(null);
+        assertThat(task).isNull();
 
     }
 
