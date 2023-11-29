@@ -11,9 +11,7 @@ import java.time.LocalDate;
 @Setter
 public class GuestCreateDTO {
 
-    //private long id;
-
-    @NotNull
+    @NotBlank
     private String name;
 
     @Email
@@ -26,10 +24,8 @@ public class GuestCreateDTO {
     @Size(min = 4, max = 4)
     private String clubCard;
 
-    @FutureOrPresent
+    @Future
     private LocalDate cardValidUntil;
-
-    private LocalDate createdAt;
 
 }
 // END

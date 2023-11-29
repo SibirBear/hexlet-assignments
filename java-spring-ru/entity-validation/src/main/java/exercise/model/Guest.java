@@ -31,20 +31,20 @@ public class Guest {
     private long id;
 
     // BEGIN
-    @NotNull
+    @NotBlank
     private String name;
 
     @Email
     private String email;
 
-    @NotBlank
+    @Pattern(regexp = "^\\+[0-9]+$")
     @Size(min = 11, max = 13)
     private String phoneNumber;
 
     @Size(min = 4, max = 4)
     private String clubCard;
 
-    @FutureOrPresent
+    @Future
     private LocalDate cardValidUntil;
     // END
 
