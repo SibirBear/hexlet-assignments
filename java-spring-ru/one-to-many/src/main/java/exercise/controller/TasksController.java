@@ -54,8 +54,11 @@ public class TasksController {
 //* *POST /tasks* – создание новой задачи
     @PostMapping(path = "")
     @ResponseStatus(HttpStatus.CREATED)
-    public TaskDTO create(@RequestBody TaskCreateDTO body) {
+    public TaskDTO create(@Valid @RequestBody TaskCreateDTO body) {
         var task = taskMapper.map(body);
+        var user = userRepository.findById(body.getAssigneeId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        task.setAssignee(user);
         taskRepository.save(task);
         var dto = taskMapper.map(task);
         return dto;
@@ -64,17 +67,13 @@ public class TasksController {
 //* *PUT /tasks/{id}* – редактирование задачи. При редактировании м должны иметь возможность поменять название, описание задачи и ответственного разработчика
     @PutMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public TaskDTO update(@RequestBody TaskUpdateDTO body, @PathVariable long id) {
+    public TaskDTO update(@Valid @RequestBody TaskUpdateDTO body, @PathVariable long id) {
         var task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task with id " + id + " not found."));
+        var user = userRepository.findById(body.getAssigneeId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         taskMapper.update(body, task);
-        var user = userRepository.findById(task.getAssignee().getId()).get();
-        user.removeTask(task);
-        var user1 = userRepository.findById(body.getAssigneeId()).get();
-        user1.addTask(task);
-        task.setAssignee(user1);
-        userRepository.save(user);
-        userRepository.save(user1);
+        task.setAssignee(user);
         taskRepository.save(task);
         var dto = taskMapper.map(task);
         return dto;
@@ -82,9 +81,6 @@ public class TasksController {
 //* *DELETE /tasks* – удаление задачи
     @DeleteMapping(path = "/{id}")
     public void delete(@PathVariable long id) {
-        var task = taskRepository.findById(id).get();
-        var user = userRepository.findById(task.getAssignee().getId());
-        user.get().removeTask(task);
         taskRepository.deleteById(id);
     }
     // END

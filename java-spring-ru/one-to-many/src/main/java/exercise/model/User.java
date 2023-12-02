@@ -47,15 +47,5 @@ public class User {
     // BEGIN
     @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks = new ArrayList<>();
-
-    public void addTask(Task task) {
-        tasks.add(task);
-        task.setAssignee(this);
-    }
-
-    public void removeTask(Task task) {
-        tasks.remove(task);
-        task.setAssignee(null);
-    }
     // END
 }
