@@ -7,7 +7,8 @@ import org.mapstruct.*;
 
 // BEGIN
 @Mapper(
-       componentModel = MappingConstants.ComponentModel.SPRING,
+       nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        componentModel = MappingConstants.ComponentModel.SPRING,
        unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public abstract class CategoryMapper {

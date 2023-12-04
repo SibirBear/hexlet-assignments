@@ -19,7 +19,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     // BEGIN
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleResourceBadRequestException(RuntimeException ex) {
+    public ResponseEntity<String> handleResourceBadRequestException(ConstraintViolationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
     // END

@@ -16,7 +16,7 @@ import org.mapstruct.ReportingPolicy;
         uses = { JsonNullableMapper.class, ReferenceMapper.class },
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         componentModel = MappingConstants.ComponentModel.SPRING,
-        unmappedSourcePolicy = ReportingPolicy.IGNORE
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public abstract class ProductMapper {
 
@@ -27,6 +27,7 @@ public abstract class ProductMapper {
     @Mapping(source = "category.name", target = "categoryName")
     public abstract ProductDTO map(Product model);
 
+    @Mapping(source = "categoryId", target = "category")
     public abstract void update(ProductUpdateDTO dto, @MappingTarget Product model);
 
 }
