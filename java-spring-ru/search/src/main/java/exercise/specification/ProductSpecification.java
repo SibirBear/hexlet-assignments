@@ -46,7 +46,7 @@ public class ProductSpecification {
     private Specification<Product> withTitle(String title) {
         return (root, query, cb) ->
                 title == null ? cb.conjunction()
-                        : cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%");
+                        : cb.like(cb.lower(root.get("title")), "%" + title + "%");
     }
 
 }
